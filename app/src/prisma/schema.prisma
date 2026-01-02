@@ -1,0 +1,54 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+model User {
+    id                  String      @id @default(cuid())
+    email               String      @unique
+    passwordHash        String
+    role                Role        @default(USER)
+    createdAt           DateTime    @default(now())
+    entries             Entry[]
+    sobrietyStartDate   DateTime?
+    reminderLogs        ReminderLog[]
+}
+
+enum Role {
+    ADMIN
+    USER
+    PROVIDER
+}
+
+model Entry {
+    id          String      @id @default(cuid())
+    userId      String
+    date        DateTime    // normalized to midnight UTC per day
+    metrics     Json        // { sleep_hours, mood_score, ... }
+    notes       String?
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+
+    user            User        @relation(fields: [userId], references: [id])
+
+    @@unique([userId, date], name: "userId_date")
+}
+
+model ReminderLog {
+    id      String   @id @default(cuid())
+    userId  String
+    type    ReminderType
+    sentAt  DateTime @default(now())
+    success Boolean
+    info    String?
+
+    user    User     @relation(fields: [userId], references: [id])
+}
+
+enum ReminderType {
+    MIDDAY
+    NIGHT
+}

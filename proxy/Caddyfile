@@ -1,0 +1,4 @@
+clemans.net {
+    encode gzip
+    reverse_proxy wellness_analytics_app:3000
+}

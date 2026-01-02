@@ -1,0 +1,42 @@
+version: 3.9
+
+services:
+
+db:
+  image: postegres:16
+  container_name: wellness_analytics_db
+  env_file: .env_db
+  volumes:
+    - ./db_data:/var/lib/postegresql/data
+  networks:
+    - appnet
+
+app:
+  build: ./app
+  container_name: wellness_analytics_app
+  env_file: .env_app
+  depends_on: 
+    - db
+  networks:
+    - appnet
+
+worker:
+  build: ./app
+  container_name: wellness_analytics_worker
+  env_file: .env_worker
+  depends_on: 
+    - db
+  networks:
+    - appnet
+  command: ["node", "dist/worker.js"]
+
+  proxy:
+    image: caddy:2
+    container_name: wellness_analytics_proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy_data:/data
+      - ./caddy_config:/caddy_config
